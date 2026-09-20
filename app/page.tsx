@@ -16,25 +16,38 @@ export default async function HomePage({ searchParams }: PageProps) {
   const params = await searchParams;
   const session = await getSession();
 
-  const [transactionsCount, activeUsersCount, rawTransactions, totalVolume] = await Promise.all([
-    db.transaction.count(),
-    db.user.count(),
-    db.transaction.findMany({
-      take: 12,
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
+  let transactionsCount = 0;
+  let activeUsersCount = 1;
+  let rawTransactions: any[] = [];
+  let totalVolume: { _sum: { amount: number | null } } = { _sum: { amount: 0 } };
+
+  try {
+    const results = await Promise.all([
+      db.transaction.count(),
+      db.user.count(),
+      db.transaction.findMany({
+        take: 12,
+        orderBy: { createdAt: "desc" },
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
         },
-      },
-    }),
-    db.transaction.aggregate({
-      _sum: { amount: true },
-    }),
-  ]);
+      }),
+      db.transaction.aggregate({
+        _sum: { amount: true },
+      }),
+    ]);
+    transactionsCount = results[0];
+    activeUsersCount = results[1];
+    rawTransactions = results[2];
+    totalVolume = results[3];
+  } catch (error) {
+    console.error(error);
+  }
 
   const transactions: TransactionRecord[] = rawTransactions.map((tx) => ({
     id: tx.id,

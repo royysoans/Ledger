@@ -42,19 +42,21 @@ export async function getSession(): Promise<SessionData> {
     };
   }
 
-  const primaryUser = await db.user.findFirst({
-    where: { role: { name: "ADMIN" } },
-    include: { role: true },
-  });
+  try {
+    const primaryUser = await db.user.findFirst({
+      where: { role: { name: "ADMIN" } },
+      include: { role: true },
+    });
 
-  if (primaryUser) {
-    return {
-      userId: primaryUser.id,
-      email: primaryUser.email,
-      name: primaryUser.name,
-      role: primaryUser.role.name as RoleType,
-    };
-  }
+    if (primaryUser) {
+      return {
+        userId: primaryUser.id,
+        email: primaryUser.email,
+        name: primaryUser.name,
+        role: primaryUser.role.name as RoleType,
+      };
+    }
+  } catch {}
 
   return DEFAULT_SESSION;
 }

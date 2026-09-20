@@ -11,18 +11,23 @@ export default async function AdminGatePage() {
     redirect("/?error=admin_required");
   }
 
-  const users = await db.user.findMany({
-    include: {
-      role: true,
-      _count: {
-        select: {
-          transactions: true,
-          auditLogs: true,
+  let users: any[] = [];
+  try {
+    users = await db.user.findMany({
+      include: {
+        role: true,
+        _count: {
+          select: {
+            transactions: true,
+            auditLogs: true,
+          },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error(error);
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 space-y-6">

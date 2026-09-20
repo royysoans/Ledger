@@ -7,18 +7,27 @@ import Link from "next/link";
 export default async function DashboardPage() {
   const session = await getSession();
 
-  const [auditLogs, emailLogs] = await Promise.all([
-    db.auditLog.findMany({
-      take: 10,
-      orderBy: { createdAt: "desc" },
-      include: { user: true },
-    }),
-    db.emailLog.findMany({
-      take: 10,
-      orderBy: { createdAt: "desc" },
-      include: { user: true },
-    }),
-  ]);
+  let auditLogs: any[] = [];
+  let emailLogs: any[] = [];
+
+  try {
+    const results = await Promise.all([
+      db.auditLog.findMany({
+        take: 10,
+        orderBy: { createdAt: "desc" },
+        include: { user: true },
+      }),
+      db.emailLog.findMany({
+        take: 10,
+        orderBy: { createdAt: "desc" },
+        include: { user: true },
+      }),
+    ]);
+    auditLogs = results[0];
+    emailLogs = results[1];
+  } catch (error) {
+    console.error(error);
+  }
 
   const sampleResendId = emailLogs[0]?.resendId || undefined;
 
