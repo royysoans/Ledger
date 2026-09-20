@@ -8,10 +8,16 @@ import {
   useIsCartOpen,
   useCartActions,
 } from "@/lib/store";
-import { ShoppingBag, Plus, Minus, Trash2, X, ArrowRight } from "lucide-react";
+import { ShoppingBag, Plus, Minus, Trash2, X, ArrowRight, Loader2 } from "lucide-react";
+import { checkoutCartAction } from "@/lib/actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function CartSheet() {
   const [mounted, setMounted] = React.useState(false);
+  const [isCheckingOut, setIsCheckingOut] = React.useState(false);
+  const router = useRouter();
+
   const isOpen = useIsCartOpen();
   const items = useCartItems();
   const total = useCartTotal();
@@ -21,6 +27,25 @@ export function CartSheet() {
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+    try {
+      const res = await checkoutCartAction(items);
+      if (res.success) {
+        toast.success(res.message);
+        clearCart();
+        setCartOpen(false);
+        router.refresh();
+      } else {
+        toast.error(res.message);
+      }
+    } catch {
+      toast.error("Checkout failed. Please try again.");
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
 
   if (!mounted || !isOpen) return null;
 
@@ -116,20 +141,25 @@ export function CartSheet() {
             </div>
             <div className="flex gap-2 pt-1">
               <button
+                disabled={isCheckingOut}
                 onClick={clearCart}
-                className="w-1/3 h-9 rounded-lg border border-zinc-200 bg-white text-xs font-medium text-black shadow-xs hover:bg-zinc-50 dark:border-zinc-800 dark:bg-black dark:text-white dark:hover:bg-zinc-900"
+                className="w-1/3 h-9 rounded-lg border border-zinc-200 bg-white text-xs font-medium text-black shadow-xs hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-800 dark:bg-black dark:text-white dark:hover:bg-zinc-900"
               >
                 Clear Cart
               </button>
               <button
-                onClick={() => {
-                  alert(`Checkout completed for ₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}!`);
-                  setCartOpen(false);
-                }}
-                className="w-2/3 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-black text-xs font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+                disabled={isCheckingOut}
+                onClick={handleCheckout}
+                className="w-2/3 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-black text-xs font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
               >
-                <span>Checkout (₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                {isCheckingOut ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <span>Checkout (₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </>
+                )}
               </button>
             </div>
           </div>

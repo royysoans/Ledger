@@ -141,6 +141,102 @@ export async function sendLiveTestEmailAction(): Promise<ActionResponse<{ resend
   }
 }
 
+export async function checkoutCartAction(
+  items: Array<{ id: string; name: string; category: string; price: number; quantity: number }>
+): Promise<ActionResponse<{ createdCount: number; totalAmount: number }>> {
+  try {
+    if (!items || items.length === 0) {
+      return { success: false, message: "Cart is empty." };
+    }
+
+    const session = await getSession();
+
+    if (!hasPermission(session.role, "MEMBER")) {
+      return {
+        success: false,
+        message: "Insufficient permissions. Guests cannot checkout orders.",
+      };
+    }
+
+    let user = await db.user.findFirst({
+      where: { email: session.email },
+    });
+
+    if (!user) {
+      const defaultRole = await db.role.findFirst({
+        where: { name: "MEMBER" },
+      });
+      user = await db.user.create({
+        data: {
+          email: session.email,
+          name: session.name,
+          roleId: defaultRole?.id || "",
+        },
+      });
+    }
+
+    let totalAmount = 0;
+    const createdTransactions = [];
+
+    for (const item of items) {
+      const itemTotal = Number((item.price * item.quantity).toFixed(2));
+      totalAmount += itemTotal;
+
+      const tx = await db.transaction.create({
+        data: {
+          amount: itemTotal,
+          currency: "INR",
+          status: "COMPLETED",
+          recipient: item.name,
+          category: item.category,
+          reference: `REF-ORD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          userId: user.id,
+        },
+      });
+
+      await db.auditLog.create({
+        data: {
+          action: "TRANSACTION_CREATED",
+          details: JSON.stringify({
+            transactionId: tx.id,
+            amount: itemTotal,
+            recipient: item.name,
+            category: item.category,
+            source: "CART_CHECKOUT",
+            currency: "INR",
+          }),
+          ipAddress: "127.0.0.1",
+          userId: user.id,
+        },
+      });
+
+      createdTransactions.push(tx);
+    }
+
+    await dispatchTransactionNotification({
+      recipientEmail: session.email,
+      recipientName: session.name,
+      amount: totalAmount,
+      category: items[0]?.category || "General Order",
+      reference: createdTransactions[0]?.reference ?? undefined,
+      userId: user.id,
+    });
+
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      message: `Checkout successful! ₹${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} logged to transaction ledger.`,
+      data: { createdCount: createdTransactions.length, totalAmount },
+    };
+  } catch (error) {
+    const err = error instanceof Error ? error.message : "Checkout failed";
+    return { success: false, message: err };
+  }
+}
+
+
 export async function simulateWebhookEventAction(
   type: "email.delivered" | "email.bounced",
   targetResendId?: string
