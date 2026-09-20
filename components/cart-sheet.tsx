@@ -71,7 +71,7 @@ export function CartSheet() {
                   <div className="font-semibold text-black dark:text-white">{item.name}</div>
                   <div className="text-[10px] text-zinc-500">{item.category}</div>
                   <div className="font-mono text-xs font-bold text-black dark:text-white">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ₹{(item.price * item.quantity).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
 
@@ -111,7 +111,7 @@ export function CartSheet() {
             <div className="flex justify-between items-baseline">
               <span className="text-xs text-zinc-500">Subtotal Amount</span>
               <span className="font-mono text-base font-bold text-black dark:text-white">
-                ${total.toFixed(2)}
+                ₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
             <div className="flex gap-2 pt-1">
@@ -123,12 +123,12 @@ export function CartSheet() {
               </button>
               <button
                 onClick={() => {
-                  alert(`Checkout completed for $${total.toFixed(2)}!`);
+                  alert(`Checkout completed for ₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}!`);
                   setCartOpen(false);
                 }}
                 className="w-2/3 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-black text-xs font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
               >
-                <span>Checkout (${total.toFixed(2)})</span>
+                <span>Checkout (₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>

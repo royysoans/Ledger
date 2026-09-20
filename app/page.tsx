@@ -5,7 +5,7 @@ import { HydrationDemo } from "@/components/hydration-demo";
 import { TransactionForm } from "@/components/transaction-form";
 import { TransactionsTable, TransactionRecord } from "@/components/transactions-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, Layers, ShieldCheck, ArrowRight } from "lucide-react";
+import { IndianRupee, Layers, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 interface PageProps {
@@ -111,11 +111,11 @@ export default async function HomePage({ searchParams }: PageProps) {
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500">Gross Volume</span>
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
-              <DollarSign className="h-4 w-4" />
+              <IndianRupee className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 font-mono text-2xl font-bold tracking-tight text-black dark:text-white">
-            ${(totalVolume._sum.amount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{(totalVolume._sum.amount ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className="mt-1 text-[11px] text-zinc-400">Aggregated from Prisma database</div>
         </div>

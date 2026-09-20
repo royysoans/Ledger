@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { transactionSchema, TransactionInput } from "@/lib/schemas";
 import { createTransactionMutation } from "@/lib/actions";
 import { toast } from "sonner";
-import { Send, DollarSign, Building2, Mail, Tag, Hash, Loader2 } from "lucide-react";
+import { Send, IndianRupee, Building2, Mail, Tag, Hash, Loader2 } from "lucide-react";
 
 interface TransactionFormProps {
   defaultEmail?: string;
@@ -27,7 +27,7 @@ export function TransactionForm({ defaultEmail, onSuccess }: TransactionFormProp
     defaultValues: {
       userEmail: defaultEmail || "roystonsoans3@gmail.com",
       category: "Cloud Infrastructure",
-      amount: 150.0,
+      amount: 1500.0,
       recipient: "",
       reference: "",
     },
@@ -110,8 +110,8 @@ export function TransactionForm({ defaultEmail, onSuccess }: TransactionFormProp
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <label className="flex items-center gap-1.5 text-xs font-medium text-black dark:text-white">
-              <DollarSign className="h-3.5 w-3.5 text-zinc-400" />
-              <span>Amount (USD)</span>
+              <IndianRupee className="h-3.5 w-3.5 text-zinc-400" />
+              <span>Amount (INR - ₹)</span>
             </label>
             <input
               type="number"

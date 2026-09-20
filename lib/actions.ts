@@ -58,7 +58,7 @@ export async function createTransactionMutation(
     const transaction = await db.transaction.create({
       data: {
         amount: payload.amount,
-        currency: "USD",
+        currency: "INR",
         status: "COMPLETED",
         recipient: payload.recipient,
         category: payload.category,
@@ -75,6 +75,7 @@ export async function createTransactionMutation(
           amount: payload.amount,
           category: payload.category,
           initiatedBy: session.email,
+          currency: "INR",
         }),
         ipAddress: "127.0.0.1",
         userId: user.id,
@@ -95,7 +96,7 @@ export async function createTransactionMutation(
 
     return {
       success: true,
-      message: `Transaction for $${payload.amount.toFixed(2)} processed and logged.`,
+      message: `Transaction for ₹${payload.amount.toLocaleString("en-IN")} processed and logged.`,
       data: {
         id: transaction.id,
         amount: transaction.amount,
@@ -108,6 +109,35 @@ export async function createTransactionMutation(
       success: false,
       message: `Server Action mutation failed: ${errMessage}`,
     };
+  }
+}
+
+export async function sendLiveTestEmailAction(): Promise<ActionResponse<{ resendId: string | null }>> {
+  try {
+    const adminUser = await db.user.findFirst({
+      where: { role: { name: "ADMIN" } },
+    });
+
+    const result = await dispatchTransactionNotification({
+      recipientEmail: "roystonsoans3@gmail.com",
+      recipientName: "Royston Soans",
+      amount: 14500.0,
+      category: "Cloud Infrastructure",
+      reference: `REF-LIVE-${Date.now().toString().slice(-4)}`,
+      userId: adminUser?.id,
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+
+    return {
+      success: true,
+      message: `Live test email dispatched to roystonsoans3@gmail.com (Resend ID: ${result.resendId || "logged"})`,
+      data: { resendId: result.resendId },
+    };
+  } catch (error) {
+    const err = error instanceof Error ? error.message : "Failed to dispatch email";
+    return { success: false, message: err };
   }
 }
 

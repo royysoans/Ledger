@@ -165,7 +165,7 @@ export function TransactionsTable({ initialTransactions }: TransactionsTableProp
                     </span>
                   </td>
                   <td className="py-3.5 font-mono text-sm font-semibold text-black dark:text-white">
-                    ${tx.amount.toFixed(2)}
+                    ₹{tx.amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="py-3.5 text-right pr-1">
                     <button

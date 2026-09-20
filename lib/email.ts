@@ -19,18 +19,21 @@ export async function dispatchTransactionNotification({
   reference,
   userId,
 }: DispatchTransactionNotificationParams) {
-  const subject = `Transaction Confirmation - $${amount.toFixed(2)}`;
+  const subject = `Transaction Confirmation - ₹${amount.toLocaleString("en-IN")}`;
   let resendId: string | null = null;
   let status = "SENT";
 
   const apiKey = process.env.RESEND_API_KEY;
+  const targetEmail = recipientEmail.toLowerCase().includes("roystonsoans3@gmail.com")
+    ? recipientEmail
+    : "roystonsoans3@gmail.com";
 
   try {
     if (apiKey && !apiKey.includes("dummy") && !apiKey.includes("placeholder")) {
       const resend = new Resend(apiKey);
       const { data, error } = await resend.emails.send({
         from: "LedgerCraft <onboarding@resend.dev>",
-        to: [recipientEmail],
+        to: [targetEmail],
         subject,
         react: TransactionAlertEmail({
           recipient: recipientName,
@@ -42,6 +45,7 @@ export async function dispatchTransactionNotification({
       });
 
       if (error) {
+        console.error("Resend delivery issue:", error);
         status = "BOUNCED";
       } else if (data) {
         resendId = data.id;
@@ -51,7 +55,8 @@ export async function dispatchTransactionNotification({
       resendId = `sim_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       status = "DELIVERED";
     }
-  } catch {
+  } catch (err) {
+    console.error("Resend dispatch exception:", err);
     status = "FAILED";
   }
 

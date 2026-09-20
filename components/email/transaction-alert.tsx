@@ -26,9 +26,9 @@ export const TransactionAlertEmail = ({
   reference,
   timestamp,
 }: TransactionAlertEmailProps) => {
-  const formattedAmount = new Intl.NumberFormat("en-US", {
+  const formattedAmount = new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
   }).format(amount);
 
   return (

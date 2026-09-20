@@ -34,7 +34,7 @@ model User {
 model Transaction {
   id          String   @id @default(cuid())
   amount      Float
-  currency    String   @default("USD")
+  currency    String   @default("INR")
   status      String   @default("COMPLETED")
   recipient   String
   category    String
