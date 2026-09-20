@@ -33,8 +33,8 @@ async function main() {
 
   const primaryAdmin = await prisma.user.create({
     data: {
-      name: "Alex Vance",
-      email: "admin@enterprise.dev",
+      name: "Royston Soans",
+      email: "roystonsoans3@gmail.com",
       roleId: adminRole.id,
     },
   });

@@ -25,7 +25,7 @@ export function TransactionForm({ defaultEmail, onSuccess }: TransactionFormProp
   } = useForm<TransactionInput>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      userEmail: defaultEmail || "admin@ledgercraft.dev",
+      userEmail: defaultEmail || "roystonsoans3@gmail.com",
       category: "Cloud Infrastructure",
       amount: 150.0,
       recipient: "",

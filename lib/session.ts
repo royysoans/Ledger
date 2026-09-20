@@ -11,8 +11,8 @@ export interface SessionData {
 
 const DEFAULT_SESSION: SessionData = {
   userId: "admin-default",
-  email: "admin@enterprise.dev",
-  name: "Alex Vance",
+  email: "roystonsoans3@gmail.com",
+  name: "Royston Soans",
   role: "ADMIN",
 };
 

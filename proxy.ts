@@ -6,7 +6,7 @@ export function proxy(request: NextRequest) {
 
   const sessionCookie = request.cookies.get("fst_session")?.value;
   let userRole = "ADMIN";
-  let userEmail = "admin@ledgercraft.dev";
+  let userEmail = "roystonsoans3@gmail.com";
 
   if (sessionCookie) {
     try {
