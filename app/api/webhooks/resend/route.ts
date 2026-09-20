@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { resendWebhookSchema } from "@/lib/schemas";
 
@@ -64,6 +65,9 @@ export async function POST(request: Request) {
         },
       });
     }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/");
 
     return NextResponse.json({
       success: true,

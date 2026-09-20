@@ -46,7 +46,11 @@ export function WebhookSimulator({ sampleResendId }: { sampleResendId?: string }
 
       const json = await res.json();
       if (res.ok) {
-        toast.success(`Webhook logged: ${type === "email.delivered" ? "Delivered" : "Bounced"}`);
+        if (type === "email.bounced") {
+          toast.success("Simulated Bounce: Updated email status to Bounced & logged to Audit Ledger");
+        } else {
+          toast.success("Simulated Delivery: Updated email status to Delivered");
+        }
         router.refresh();
       } else {
         toast.error(`Webhook error: ${json.error || "Unknown"}`);

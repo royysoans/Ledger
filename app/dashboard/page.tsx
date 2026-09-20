@@ -4,6 +4,8 @@ import { WebhookSimulator } from "@/components/webhook-simulator";
 import { Mail, Shield, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const session = await getSession();
 
