@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { WebhookSimulator } from "@/components/webhook-simulator";
-import { Mail, Shield, ArrowLeft } from "lucide-react";
+import { EmailDispatchesList } from "@/components/email-dispatches-list";
+import { Mail, Shield, ArrowLeft, Info } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -62,6 +63,16 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      <div className="rounded-xl border border-blue-200/80 bg-blue-50/40 p-4 text-xs dark:border-blue-900/40 dark:bg-blue-950/20 text-blue-900 dark:text-blue-200 flex items-start gap-3">
+        <Info className="h-4 w-4 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
+        <div className="space-y-1">
+          <span className="font-semibold block">How Delivery & Bounce Webhooks Work:</span>
+          <p className="text-zinc-600 dark:text-zinc-300">
+            Resend webhooks are server callbacks. In production, when an email reaches an inbox or gets rejected by the recipient mail server, Resend pings this application. Clicking <strong>Mark Bounced</strong> or <strong>Mark Delivered</strong> tests that workflow: it flips the dispatch status badge and logs an immutable audit event in the Security Ledger below.
+          </p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-black">
           <div className="flex items-center gap-2.5 border-b border-zinc-100 pb-4 dark:border-zinc-800">
@@ -78,43 +89,8 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="mt-4 divide-y divide-zinc-100 text-xs dark:divide-zinc-800">
-            {emailLogs.length === 0 ? (
-              <p className="py-10 text-center text-zinc-400">No email records found.</p>
-            ) : (
-              emailLogs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between py-3">
-                  <div className="space-y-0.5">
-                    <div className="font-semibold text-black dark:text-white">
-                      {log.subject}
-                    </div>
-                    <div className="text-[11px] text-zinc-500 font-mono">
-                      To: {log.recipient} {log.resendId ? `[${log.resendId.slice(0, 16)}...]` : ""}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[11px] text-zinc-400">
-                      {new Date(log.createdAt).toLocaleTimeString()}
-                    </span>
-                    <span
-                      className={`text-xs font-medium ${
-                        log.status === "DELIVERED"
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : log.status === "BOUNCED"
-                          ? "text-red-600 dark:text-red-400"
-                          : "text-zinc-600 dark:text-zinc-400"
-                      }`}
-                    >
-                      {log.status === "DELIVERED"
-                        ? "Delivered"
-                        : log.status === "BOUNCED"
-                        ? "Bounced"
-                        : log.status}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="mt-4">
+            <EmailDispatchesList emails={emailLogs} />
           </div>
         </div>
 
@@ -137,23 +113,37 @@ export default async function DashboardPage() {
             {auditLogs.length === 0 ? (
               <p className="py-10 text-center text-zinc-400">No audit events recorded.</p>
             ) : (
-              auditLogs.map((audit) => (
-                <div key={audit.id} className="flex items-center justify-between py-3">
-                  <div className="space-y-0.5">
-                    <div className="font-mono text-xs font-semibold text-black dark:text-white">
-                      {audit.action}
+              auditLogs.map((audit) => {
+                const isBounce = audit.action === "WEBHOOK_EMAIL_BOUNCED";
+                const isDelivery = audit.action === "WEBHOOK_EMAIL_DELIVERED";
+
+                return (
+                  <div key={audit.id} className="flex items-center justify-between py-3">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2 font-mono text-xs font-semibold text-black dark:text-white">
+                        <span>{audit.action}</span>
+                        {isBounce && (
+                          <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700 dark:bg-red-950 dark:text-red-300">
+                            Bounced
+                          </span>
+                        )}
+                        {isDelivery && (
+                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                            Delivered
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-zinc-500 font-mono">
+                        Initiated by: {audit.user.email}
+                      </div>
                     </div>
-                    <div className="text-[11px] text-zinc-500 font-mono">
-                      Initiated by: {audit.user.email}
+                    <div className="text-right font-mono text-[11px] text-zinc-400">
+                      <div>{new Date(audit.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
+                      <div className="text-[10px] text-zinc-500">{new Date(audit.createdAt).toLocaleDateString()}</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="font-mono text-[11px] text-zinc-400">
-                      {new Date(audit.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

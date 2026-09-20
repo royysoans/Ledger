@@ -4,62 +4,49 @@ import * as React from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, AlertTriangle, Loader2, Mail } from "lucide-react";
-import { sendLiveTestEmailAction } from "@/lib/actions";
+import { sendLiveTestEmailAction, simulateWebhookEventAction } from "@/lib/actions";
 
 export function WebhookSimulator({ sampleResendId }: { sampleResendId?: string }) {
   const [loadingType, setLoadingType] = React.useState<string | null>(null);
   const router = useRouter();
+  const [, startTransition] = React.useTransition();
 
-  const handleSendLiveEmail = async () => {
+  const handleSendLiveEmail = () => {
     setLoadingType("live_send");
-    try {
-      const res = await sendLiveTestEmailAction();
-      if (res.success) {
-        toast.success(res.message);
-        router.refresh();
-      } else {
-        toast.error(res.message);
+    startTransition(async () => {
+      try {
+        const res = await sendLiveTestEmailAction();
+        if (res.success) {
+          toast.success(res.message);
+          router.refresh();
+        } else {
+          toast.error(res.message);
+        }
+      } catch {
+        toast.error("Failed to trigger live test email");
+      } finally {
+        setLoadingType(null);
       }
-    } catch {
-      toast.error("Failed to trigger live test email");
-    } finally {
-      setLoadingType(null);
-    }
+    });
   };
 
-  const simulateEvent = async (type: "email.delivered" | "email.bounced") => {
+  const simulateEvent = (type: "email.delivered" | "email.bounced") => {
     setLoadingType(type);
-    try {
-      const res = await fetch("/api/webhooks/resend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type,
-          created_at: new Date().toISOString(),
-          data: {
-            id: sampleResendId || `sim_msg_${Date.now()}`,
-            to: ["roystonsoans3@gmail.com"],
-            subject: "Transaction Confirmation - ₹14,500.00",
-          },
-        }),
-      });
-
-      const json = await res.json();
-      if (res.ok) {
-        if (type === "email.bounced") {
-          toast.success("Simulated Bounce: Updated email status to Bounced & logged to Audit Ledger");
+    startTransition(async () => {
+      try {
+        const res = await simulateWebhookEventAction(type, sampleResendId);
+        if (res.success) {
+          toast.success(res.message);
+          router.refresh();
         } else {
-          toast.success("Simulated Delivery: Updated email status to Delivered");
+          toast.error(res.message);
         }
-        router.refresh();
-      } else {
-        toast.error(`Webhook error: ${json.error || "Unknown"}`);
+      } catch {
+        toast.error("Network failed during webhook trigger");
+      } finally {
+        setLoadingType(null);
       }
-    } catch {
-      toast.error("Network failed during webhook trigger");
-    } finally {
-      setLoadingType(null);
-    }
+    });
   };
 
   return (

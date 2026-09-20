@@ -41,22 +41,7 @@ const initialFilters: FilterState = {
 export const useAppStore = create<AppStoreState>()(
   persist(
     (set) => ({
-      cart: [
-        {
-          id: "item-1",
-          name: "Enterprise Compute Cluster",
-          category: "Cloud Infrastructure",
-          price: 240.0,
-          quantity: 1,
-        },
-        {
-          id: "item-2",
-          name: "Zero-Trust Security Gateway",
-          category: "Security",
-          price: 180.0,
-          quantity: 2,
-        },
-      ],
+      cart: [],
       isCartOpen: false,
       filters: initialFilters,
 
@@ -105,7 +90,7 @@ export const useAppStore = create<AppStoreState>()(
       resetFilters: () => set({ filters: initialFilters }),
     }),
     {
-      name: "fst-enterprise-store",
+      name: "fst-ledgercraft-store",
       storage: createJSONStorage(() =>
         typeof window !== "undefined"
           ? localStorage

@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { faker } from "@faker-js/faker";
 
 const prisma = new PrismaClient();
 
@@ -38,23 +39,21 @@ async function main() {
     },
   });
 
-  const secondaryMember = await prisma.user.create({
-    data: {
-      name: "Aarav Mehta",
-      email: "member@ledgercraft.dev",
-      roleId: memberRole.id,
-    },
-  });
+  const createdUsers = [primaryAdmin];
 
-  const secondaryGuest = await prisma.user.create({
-    data: {
-      name: "Ananya Sharma",
-      email: "guest@ledgercraft.dev",
-      roleId: guestRole.id,
-    },
-  });
+  for (let i = 0; i < 5; i++) {
+    const role = i % 2 === 0 ? memberRole : guestRole;
+    const user = await prisma.user.create({
+      data: {
+        name: faker.person.fullName(),
+        email: faker.internet.email().toLowerCase(),
+        roleId: role.id,
+      },
+    });
+    createdUsers.push(user);
+  }
 
-  const transactionsData = [
+  const primaryTransactions = [
     {
       amount: 14500.0,
       currency: "INR",
@@ -92,39 +91,67 @@ async function main() {
       recipient: "GitHub Enterprise",
       category: "Security",
       reference: "REF-GH-5520",
-      userId: secondaryMember.id,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 60),
-    },
-    {
-      amount: 9450.0,
-      currency: "INR",
-      status: "PENDING",
-      recipient: "Apple India Retail",
-      category: "Hardware",
-      reference: "REF-APL-7741",
       userId: primaryAdmin.id,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 84),
-    },
-    {
-      amount: 4100.0,
-      currency: "INR",
-      status: "COMPLETED",
-      recipient: "Slack Technologies",
-      category: "SaaS Licensing",
-      reference: "REF-SLK-1290",
-      userId: secondaryMember.id,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 110),
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 60),
     },
   ];
 
-  for (const tx of transactionsData) {
+  for (const tx of primaryTransactions) {
     await prisma.transaction.create({ data: tx });
+  }
+
+  const categories = [
+    "Cloud Infrastructure",
+    "API Billing",
+    "Payroll",
+    "Security",
+    "Hardware",
+    "SaaS Licensing",
+  ];
+  const statuses = ["COMPLETED", "PENDING", "PROCESSING"];
+
+  for (const user of createdUsers.slice(1)) {
+    const count = faker.number.int({ min: 2, max: 4 });
+    for (let j = 0; j < count; j++) {
+      await prisma.transaction.create({
+        data: {
+          amount: parseFloat(faker.finance.amount({ min: 1500, max: 45000, dec: 2 })),
+          currency: "INR",
+          status: faker.helpers.arrayElement(statuses),
+          recipient: faker.company.name(),
+          category: faker.helpers.arrayElement(categories),
+          reference: `REF-${faker.string.alphanumeric(8).toUpperCase()}`,
+          userId: user.id,
+          createdAt: faker.date.recent({ days: 30 }),
+        },
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          action: faker.helpers.arrayElement([
+            "TRANSACTION_CREATED",
+            "PROFILE_UPDATED",
+            "SESSION_VALIDATED",
+          ]),
+          details: JSON.stringify({
+            ip: faker.internet.ipv4(),
+            userAgent: "Next.js Turbopack Client",
+          }),
+          ipAddress: faker.internet.ipv4(),
+          userId: user.id,
+        },
+      });
+    }
   }
 
   await prisma.auditLog.create({
     data: {
       action: "TRANSACTION_CREATED",
-      details: JSON.stringify({ amount: 14500.0, recipient: "Amazon Web Services India", currency: "INR" }),
+      details: JSON.stringify({
+        amount: 14500.0,
+        recipient: "Amazon Web Services India",
+        currency: "INR",
+      }),
       ipAddress: "127.0.0.1",
       userId: primaryAdmin.id,
     },
@@ -133,16 +160,10 @@ async function main() {
   await prisma.auditLog.create({
     data: {
       action: "SESSION_AUTHENTICATED",
-      details: JSON.stringify({ email: "roystonsoans3@gmail.com", role: "ADMIN" }),
-      ipAddress: "127.0.0.1",
-      userId: primaryAdmin.id,
-    },
-  });
-
-  await prisma.auditLog.create({
-    data: {
-      action: "TRANSACTION_CREATED",
-      details: JSON.stringify({ amount: 6200.0, recipient: "Google Cloud Platform", currency: "INR" }),
+      details: JSON.stringify({
+        email: "roystonsoans3@gmail.com",
+        role: "ADMIN",
+      }),
       ipAddress: "127.0.0.1",
       userId: primaryAdmin.id,
     },

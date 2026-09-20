@@ -141,6 +141,72 @@ export async function sendLiveTestEmailAction(): Promise<ActionResponse<{ resend
   }
 }
 
+export async function simulateWebhookEventAction(
+  type: "email.delivered" | "email.bounced",
+  targetResendId?: string
+): Promise<ActionResponse<{ status: string; recordId: string }>> {
+  try {
+    const targetStatus = type === "email.delivered" ? "DELIVERED" : "BOUNCED";
+
+    let emailRecord = targetResendId
+      ? await db.emailLog.findFirst({ where: { resendId: targetResendId } })
+      : await db.emailLog.findFirst({ orderBy: { createdAt: "desc" } });
+
+    if (!emailRecord) {
+      emailRecord = await db.emailLog.findFirst({ orderBy: { createdAt: "desc" } });
+    }
+
+    if (emailRecord) {
+      await db.emailLog.update({
+        where: { id: emailRecord.id },
+        data: {
+          status: targetStatus,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      emailRecord = await db.emailLog.create({
+        data: {
+          recipient: "roystonsoans3@gmail.com",
+          subject: "Transaction Confirmation - ₹14,500.00",
+          status: targetStatus,
+          resendId: `sim_${Date.now()}`,
+        },
+      });
+    }
+
+    const adminUser = await db.user.findFirst({
+      where: { role: { name: "ADMIN" } },
+    });
+
+    if (adminUser) {
+      await db.auditLog.create({
+        data: {
+          action: `WEBHOOK_${type.toUpperCase().replace(".", "_")}`,
+          details: JSON.stringify({
+            resendId: emailRecord.resendId,
+            recipient: emailRecord.recipient,
+            status: targetStatus,
+          }),
+          userId: adminUser.id,
+        },
+      });
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+
+    return {
+      success: true,
+      message: `Status updated to ${targetStatus === "BOUNCED" ? "Bounced (Red)" : "Delivered (Green)"}`,
+      data: { status: targetStatus, recordId: emailRecord.id },
+    };
+  } catch (error) {
+    const err = error instanceof Error ? error.message : "Webhook simulation failed";
+    return { success: false, message: err };
+  }
+}
+
 export async function setSessionRoleAction(role: RoleType): Promise<ActionResponse> {
   const cookieStore = await cookies();
 
