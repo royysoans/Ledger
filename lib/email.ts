@@ -2,9 +2,6 @@ import { Resend } from "resend";
 import { db } from "@/lib/db";
 import { TransactionAlertEmail } from "@/components/email/transaction-alert";
 
-const resendApiKey = process.env.RESEND_API_KEY || "re_test_placeholder";
-const resend = new Resend(resendApiKey);
-
 interface DispatchTransactionNotificationParams {
   recipientEmail: string;
   recipientName: string;
@@ -26,10 +23,13 @@ export async function dispatchTransactionNotification({
   let resendId: string | null = null;
   let status = "SENT";
 
+  const apiKey = process.env.RESEND_API_KEY;
+
   try {
-    if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== "re_test_placeholder") {
+    if (apiKey && !apiKey.includes("dummy") && !apiKey.includes("placeholder")) {
+      const resend = new Resend(apiKey);
       const { data, error } = await resend.emails.send({
-        from: "FST1 Core <notifications@resend.dev>",
+        from: "LedgerCraft <onboarding@resend.dev>",
         to: [recipientEmail],
         subject,
         react: TransactionAlertEmail({
