@@ -51,23 +51,16 @@ export function EmailDispatchesList({ emails }: { emails: EmailLogItem[] }) {
         const isLoadingThis = isPending && activeId === log.resendId;
 
         return (
-          <div key={log.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 gap-3 transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/40 rounded-lg px-2">
-            <div className="space-y-1 min-w-0">
-              <div className="font-semibold text-black dark:text-white truncate">
+          <div
+            key={log.id}
+            className="py-4 space-y-2.5 transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/40 rounded-lg px-2.5"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="font-semibold text-black dark:text-white text-xs leading-snug break-words">
                 {log.subject}
               </div>
-              <div className="text-[11px] text-zinc-500 font-mono">
-                To: {log.recipient} {log.resendId ? `[${log.resendId.slice(0, 16)}...]` : ""}
-              </div>
-              <div className="text-[10px] text-zinc-400 flex items-center gap-1.5 font-mono">
-                <Clock className="h-3 w-3 inline" />
-                {new Date(log.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 shrink-0">
               <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border shrink-0 ${
                   isDelivered
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
                     : isBounced
@@ -75,17 +68,45 @@ export function EmailDispatchesList({ emails }: { emails: EmailLogItem[] }) {
                     : "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-700"
                 }`}
               >
-                {isDelivered && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />}
-                {isBounced && <AlertTriangle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />}
-                {log.status === "DELIVERED" ? "Delivered" : log.status === "BOUNCED" ? "Bounced" : log.status}
+                {isDelivered && (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                )}
+                {isBounced && (
+                  <AlertTriangle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                )}
+                {log.status === "DELIVERED"
+                  ? "Delivered"
+                  : log.status === "BOUNCED"
+                  ? "Bounced"
+                  : log.status}
               </span>
+            </div>
 
-              <div className="flex items-center gap-1.5 border-l border-zinc-200 pl-3 dark:border-zinc-800">
+            <div className="space-y-1 text-[11px] font-mono text-zinc-500">
+              <div>To: {log.recipient}</div>
+              {log.resendId && (
+                <div className="text-[10px] text-zinc-400 break-all">
+                  Resend ID: {log.resendId}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between pt-1 border-t border-zinc-100/80 dark:border-zinc-800/80">
+              <div className="text-[10px] text-zinc-400 flex items-center gap-1.5 font-mono">
+                <Clock className="h-3 w-3 inline" />
+                {new Date(log.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}
+              </div>
+
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   disabled={isLoadingThis || isBounced}
                   onClick={() => handleToggleStatus(log.resendId, "email.bounced")}
-                  className="rounded px-2 py-1 text-[11px] font-medium transition-colors border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
+                  className="rounded px-2.5 py-1 text-[11px] font-medium transition-colors border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
                   title="Simulate Resend bounce webhook on this dispatch"
                 >
                   {isLoadingThis && !isBounced ? (
@@ -98,7 +119,7 @@ export function EmailDispatchesList({ emails }: { emails: EmailLogItem[] }) {
                   type="button"
                   disabled={isLoadingThis || isDelivered}
                   onClick={() => handleToggleStatus(log.resendId, "email.delivered")}
-                  className="rounded px-2 py-1 text-[11px] font-medium transition-colors border border-emerald-200 text-emerald-600 hover:bg-emerald-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-950"
+                  className="rounded px-2.5 py-1 text-[11px] font-medium transition-colors border border-emerald-200 text-emerald-600 hover:bg-emerald-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-950"
                   title="Simulate Resend delivery webhook on this dispatch"
                 >
                   {isLoadingThis && isBounced ? (
